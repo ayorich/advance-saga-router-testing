@@ -2,7 +2,7 @@ import {render as rtlRender, RenderResult,RenderOptions} from "@testing-library/
 import { ReactElement } from "react"
 
 import {Provider} from 'react-redux'
-import { createMemoryHistory } from "history"
+import { createMemoryHistory, MemoryHistory } from "history"
 import {Router} from 'react-router'
 
 import { configureStoreWithMiddlewares,RootState } from "../app/store" 
@@ -14,15 +14,19 @@ type CustomRenderOptions={
     renderOptions?:Omit<RenderOptions,"wrapper">
 }
 
-function render(ui:ReactElement, {preloadedState={},routeHistory,initialRouteIndex,...renderOptions}:CustomRenderOptions={}):RenderResult{
+type CustomRenderResult=RenderResult&{history:MemoryHistory}
+
+function render(ui:ReactElement, {preloadedState={},routeHistory,initialRouteIndex,...renderOptions}:CustomRenderOptions={}):CustomRenderResult{
+    const history=createMemoryHistory({initialEntries:routeHistory,initialIndex:initialRouteIndex})
     const Wrapper:React.FC=({children})=>{
         const store=configureStoreWithMiddlewares(preloadedState)
-        const history=createMemoryHistory({initialEntries:routeHistory,initialIndex:initialRouteIndex})
         return <Provider store={store}>
             <Router history={history}>
             {children}</Router></Provider>
     }
-    return rtlRender(ui,{wrapper:Wrapper,...renderOptions})
+    const rtlRenderObj= rtlRender(ui,{wrapper:Wrapper,...renderOptions})
+
+    return{...rtlRenderObj,history}
 }
 
 
